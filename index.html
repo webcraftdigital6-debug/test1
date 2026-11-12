@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#121a28" />
+  <meta name="description" content="СТАРТ—ФАКТ — демонстрационный инструмент проверки фактической адаптации новых сотрудников." />
+  <title>СТАРТ—ФАКТ · Контроль результата адаптации</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      /* ink ramp — neutral surfaces, three text roles */
+      --bg:#f4f6f9;--paper:#fff;--raised:#eef1f5;
+      --text:#111827;--text-2:#4b5565;--text-3:#6b7487;
+      --line:rgba(17,24,39,.11);--line-soft:rgba(17,24,39,.06);
+      /* dark rail — brand chrome, kept monochrome */
+      --rail:#121a28;--rail-raised:#1b2434;--rail-line:rgba(255,255,255,.10);
+      --rail-text:#e9edf3;--rail-text-2:#a6b0bf;--rail-text-3:#79849a;
+      /* one accent: a confirmed result */
+      --accent:#15795f;--accent-ink:#0f5f4a;--accent-soft:#e9f3ef;--accent-line:rgba(21,121,95,.30);
+      /* semantic, toned down */
+      --bad:#b42318;--bad-soft:#fbeeed;--bad-line:rgba(180,35,24,.26);
+      --wait:#8a5a0b;--wait-soft:#fbf2e0;--wait-line:rgba(138,90,11,.26);
+      /* chart series */
+      --seg-yes:#15795f;--seg-partial:#c08a2e;--seg-no:#c2544c;--seg-open:#d9dee5;
+      --sans:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+      --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Consolas,monospace;
+      --r-card:14px;--r:8px;--r-sm:6px;--r-xs:4px;
+      --ease:cubic-bezier(.22,1,.36,1);
+      --shadow-card:0 1px 2px rgba(17,24,39,.04);
+      --shadow-pop:0 16px 40px rgba(17,24,39,.14);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+    button,input,select,textarea{font:inherit;color:inherit}
+    button{cursor:pointer;background:none;border:0;padding:0}
+    a{color:inherit}
+    :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-xs)}
+    .ico{flex:none}
+    .fig{font-family:var(--mono);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+    .hidden{display:none!important}
+
+    /* ---------- shell ---------- */
+    .app{height:100vh;display:flex;overflow:hidden}
+    .sidebar{width:248px;flex:0 0 248px;background:var(--rail);color:var(--rail-text);display:flex;flex-direction:column;height:100vh;overflow-y:auto;padding:20px 12px 16px}
+    .main{flex:1;min-width:0;display:flex;flex-direction:column;height:100vh}
+    .content{flex:1;overflow-y:auto;padding:24px 32px 32px}
+    .page{max-width:1560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:20px}
+
+    /* ---------- rail ---------- */
+    .brand{display:flex;align-items:center;gap:10px;padding:0 8px 24px}
+    .brand-mark{width:28px;height:28px;border-radius:var(--r-sm);background:var(--rail-text);color:var(--rail);display:grid;place-items:center;flex:none}
+    .brand-name{display:block;font-size:15px;font-weight:500;letter-spacing:.02em;color:#fff;line-height:1.2}
+    .brand-sub{display:block;font-size:12px;color:var(--rail-text-3);margin-top:2px}
+    .rail-label{font-size:12px;color:var(--rail-text-3);padding:0 10px;margin-bottom:8px}
+    .nav{display:grid;gap:2px}
+    .nav-btn{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:var(--r);color:var(--rail-text-2);font-size:14px;text-align:left;transition:background-color .16s var(--ease),color .16s var(--ease)}
+    .nav-btn:hover{background:var(--rail-raised);color:var(--rail-text)}
+    .nav-btn.active{background:var(--rail-raised);color:#fff;font-weight:500}
+    .nav-btn .ico{color:var(--rail-text-3)}
+    .nav-btn.active .ico{color:var(--rail-text)}
+    .nav-count{margin-left:auto;font-size:12px;color:var(--rail-text-3)}
+    .sidebar-bottom{margin-top:auto;padding-top:24px}
+    .rail-note{padding:14px 10px 0;border-top:1px solid var(--rail-line)}
+    .rail-note p{margin:0 0 10px;font-size:12px;line-height:1.5;color:var(--rail-text-3)}
+    .rail-link{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--rail-text-2);transition:color .16s var(--ease)}
+    .rail-link:hover{color:#fff}
+    .user-mini{display:flex;align-items:center;gap:10px;padding:16px 10px 0;margin-top:14px;border-top:1px solid var(--rail-line)}
+    .avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--raised);color:var(--text-2);font-size:12px;font-weight:500;flex:none}
+    .user-mini .avatar{background:rgba(255,255,255,.12);color:var(--rail-text)}
+    .user-text strong{display:block;font-size:13px;font-weight:500;color:var(--rail-text)}
+    .user-text small{display:block;font-size:12px;color:var(--rail-text-3)}
+
+    /* ---------- topbar ---------- */
+    .topbar{flex:0 0 60px;display:flex;align-items:center;padding:0 32px;background:var(--paper);border-bottom:1px solid var(--line)}
+    .topbar-inner{width:100%;max-width:1560px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-3)}
+    .crumb b{color:var(--text);font-weight:500}
+    .crumb-sep{color:#c2c9d3}
+    .top-actions{display:flex;align-items:center;gap:16px}
+    .env{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--text-3)}
+    .dot{width:6px;height:6px;border-radius:50%;background:#b9c1cc;flex:none}
+    .role-select{height:32px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper);padding:0 8px;font-size:13px;color:var(--text-2);max-width:220px}
+
+    /* ---------- page head ---------- */
+    .page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}
+    .head-text{min-width:0}
+    .eyebrow{font-size:13px;color:var(--text-3);margin-bottom:4px}
+    .page-title{margin:0;font-size:28px;line-height:1.2;font-weight:500;letter-spacing:-.01em}
+    .page-desc{margin:8px 0 0;color:var(--text-2);font-size:14px;line-height:1.6;max-width:62ch}
+    .head-actions{display:flex;gap:8px;flex-wrap:wrap;flex:none}
+    .quiet-tag{display:inline-flex;align-items:center;height:32px;padding:0 12px;border:1px solid var(--line);border-radius:var(--r-sm);font-size:13px;color:var(--text-2)}
+
+    /* ---------- controls ---------- */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 14px;border-radius:var(--r);border:1px solid var(--line);background:var(--paper);color:var(--text);font-size:13px;font-weight:500;transition:background-color .16s var(--ease),border-color .16s var(--ease),color .16s var(--ease)}
+    .btn:hover{background:var(--raised)}
+    .btn--primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn--primary:hover{background:#12674f;border-color:#12674f}
+    .btn--sm{height:32px;padding:0 10px;font-size:13px}
+    .btn--block{width:100%}
+    .link-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--text-2);transition:color .16s var(--ease)}
+    .link-btn:hover{color:var(--text)}
+    .chip{height:32px;padding:0 12px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--paper);font-size:13px;color:var(--text-2);transition:background-color .16s var(--ease),border-color .16s var(--ease),color .16s var(--ease)}
+    .chip:hover{background:var(--raised)}
+    .chip.is-active{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink)}
+    .field,.select,.textarea{border:1px solid var(--line);border-radius:var(--r);background:var(--paper);padding:8px 10px;font-size:13px;color:var(--text);min-width:0}
+    .field::placeholder,.textarea::placeholder{color:#a5aeba}
+    .field{min-width:200px}
+    .textarea{width:100%;resize:vertical;min-height:76px;line-height:1.55}
+    .label{font-size:13px;font-weight:500;color:var(--text-2);display:block;margin-bottom:8px}
+    .helper{font-size:12px;color:var(--text-3);line-height:1.5;margin-top:8px}
+    .form-group{margin-bottom:16px}
+
+    /* ---------- stat strip ---------- */
+    .stat-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--paper);border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow-card)}
+    .stat{padding:16px 20px;border-right:1px solid var(--line)}
+    .stat:last-child{border-right:0}
+    .stat-label{font-size:13px;color:var(--text-2)}
+    .stat-value{margin-top:6px;font-size:28px;line-height:1.1;font-weight:500;color:var(--text);letter-spacing:-.01em}
+    .stat-value.is-accent{color:var(--accent)}
+    .stat-note{margin-top:4px;font-size:12px;color:var(--text-3)}
+
+    /* ---------- cards ---------- */
+    .grid{display:grid;gap:16px}
+    .cols-2{grid-template-columns:minmax(0,2fr) minmax(320px,1fr);align-items:start}
+    .cols-2.grow{flex:1;min-height:0}
+    .grow{flex:1;min-height:0}
+    .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-card);padding:20px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;min-width:0}
+    .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
+    .card-title{margin:0;font-size:16px;font-weight:500;line-height:1.3}
+    .card-sub{margin:4px 0 0;font-size:13px;color:var(--text-3);line-height:1.5}
+    .card-foot{margin-top:auto;padding-top:16px;display:flex;justify-content:flex-end}
+    .quiet-count{font-size:12px;color:var(--text-3);white-space:nowrap}
+
+    /* ---------- table ---------- */
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    th{text-align:left;padding:0 12px 8px;font-size:12px;font-weight:500;color:var(--text-3);border-bottom:1px solid var(--line);white-space:nowrap}
+    td{padding:12px;font-size:13px;color:var(--text-2);border-bottom:1px solid var(--line-soft);vertical-align:middle}
+    th:first-child,td:first-child{padding-left:0}
+    th:last-child,td:last-child{padding-right:0}
+    tbody tr:last-child td{border-bottom:0}
+    .person{display:flex;align-items:center;gap:10px}
+    .person .avatar{width:28px;height:28px;font-size:12px}
+    .person-text{min-width:0}
+    .person-text strong{display:block;font-size:13px;font-weight:500;color:var(--text);white-space:nowrap}
+    .person-text small{display:block;font-size:12px;color:var(--text-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+    .person-text .person-day{color:var(--text-3);margin-top:3px;font-variant-numeric:tabular-nums}
+    .dept{display:block;white-space:nowrap}
+    .dept-brand{display:block;font-size:12px;color:var(--text-3);margin-top:2px;white-space:nowrap}
+    .row-link{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:var(--r-sm);color:var(--text-3);transition:background-color .16s var(--ease),color .16s var(--ease)}
+    .row-link:hover{background:var(--raised);color:var(--text)}
+
+    /* ---------- progress, stamp, status ---------- */
+    .progress{display:flex;align-items:center;gap:8px;min-width:104px}
+    .progress-track{display:block;flex:1;height:6px;border-radius:3px;background:var(--raised);overflow:hidden}
+    .progress-full{flex:none;grid-column:1/-1}
+    .progress-fill{display:block;height:100%;width:100%;border-radius:3px;background:var(--accent);transform-origin:left center;transform:scaleX(0);transition:transform .3s var(--ease)}
+    .progress .fig{font-size:12px;color:var(--text-2)}
+    .stamp{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:var(--r-xs);border:1.5px solid #b9c1cc;color:#fff;flex:none}
+    .stamp--yes{background:var(--accent);border-color:var(--accent)}
+    .stamp--partial{background:var(--wait);border-color:var(--wait)}
+    .stamp--no{background:var(--bad);border-color:var(--bad)}
+    .verdict{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2);white-space:nowrap}
+    .status{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2);white-space:nowrap}
+    .status--yes .dot{background:var(--accent)}
+    .status--wait .dot{background:var(--wait)}
+    .status--bad .dot{background:var(--bad)}
+
+    /* ---------- issue list ---------- */
+    .issue-list{display:grid}
+    .issue-row{display:flex;align-items:flex-start;gap:12px;width:100%;margin:0 -10px;padding:12px 10px;border-bottom:1px solid var(--line-soft);border-radius:var(--r-sm);text-align:left;transition:background-color .16s var(--ease)}
+    .issue-list .issue-row:first-child{padding-top:0}
+    .issue-list .issue-row:last-child{border-bottom:0;padding-bottom:0}
+    .issue-row:hover{background:var(--raised)}
+    .sev{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none;background:#b9c1cc}
+    .sev--high{background:var(--bad)}
+    .sev--medium{background:var(--wait)}
+    .issue-main{min-width:0;flex:1}
+    .issue-main strong{display:block;font-size:13px;font-weight:500;color:var(--text);line-height:1.4}
+    .issue-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;font-size:12px;color:var(--text-3)}
+    .issue-side{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
+    .issue-side .quiet-count{font-size:12px}
+    .empty{padding:40px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;color:var(--text-3);font-size:13px}
+    .empty .ico{color:#b9c1cc}
+
+    /* ---------- notices ---------- */
+    .notice{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper);font-size:13px;line-height:1.55;color:var(--text-2)}
+    .notice .ico{color:#a5aeba;margin-top:2px}
+    .notice strong{color:var(--text);font-weight:500}
+    .notice--warn{border-color:var(--wait-line);background:var(--wait-soft);color:#6f4a09}
+    .notice--warn .ico{color:var(--wait)}
+    .notice--warn strong{color:#5d3e07}
+    .notice--success{border-color:var(--accent-line);background:var(--accent-soft);color:#0f5f4a}
+    .notice--success .ico{color:var(--accent)}
+    .notice--success strong{color:var(--accent-ink)}
+
+    /* ---------- filters ---------- */
+    .filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+    /* ---------- employee portal ---------- */
+    .employee-layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px;align-items:start}
+    .employee-profile{display:flex;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+    .employee-profile .avatar{width:44px;height:44px;font-size:15px}
+    .employee-profile h3{margin:0;font-size:15px;font-weight:500}
+    .employee-profile p{margin:2px 0 0;font-size:13px;color:var(--text-3)}
+    .profile-info{display:grid;gap:12px;padding-top:16px}
+    .info-line{display:flex;justify-content:space-between;gap:12px;font-size:13px}
+    .info-line span:first-child{color:var(--text-3)}
+    .info-line strong{font-weight:500;text-align:right}
+    .task-card{padding:20px;margin-bottom:16px}
+    .task-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+    .task-title{margin:0;font-size:15px;font-weight:500;line-height:1.4}
+    .task-desc{margin:4px 0 0;font-size:13px;color:var(--text-2);line-height:1.55}
+    .task-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--text-3)}
+    .task-meta span{display:inline-flex;align-items:center;gap:6px}
+    .task-meta .ico{color:#a5aeba}
+    .verdict-block{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+    .confirm-question{font-size:14px;font-weight:500;margin-bottom:12px}
+    .verdict-row{display:flex;gap:8px;flex-wrap:wrap}
+    .verdict-opt{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper);font-size:13px;color:var(--text-2);transition:background-color .16s var(--ease),border-color .16s var(--ease),color .16s var(--ease)}
+    .verdict-opt:hover{background:var(--raised);color:var(--text)}
+    .verdict-opt.is-selected{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink)}
+    .verdict-opt.is-selected[data-answer="partial"]{background:var(--wait-soft);border-color:var(--wait-line);color:#6f4a09}
+    .verdict-opt.is-selected[data-answer="no"]{background:var(--bad-soft);border-color:var(--bad-line);color:#8f1c13}
+    .verdict-opt .stamp{border-color:#b9c1cc}
+    .task-result{margin-top:12px;font-size:12px;color:var(--text-3)}
+    .task-result b{color:var(--text-2);font-weight:500}
+
+    /* ---------- issue detail ---------- */
+    .detail-section{padding:16px 0;border-bottom:1px solid var(--line)}
+    .detail-section:first-child{padding-top:0}
+    .detail-section:last-child{border-bottom:0;padding-bottom:0}
+    .detail-label{font-size:12px;color:var(--text-3);margin-bottom:6px}
+    .detail-value{font-size:13px;line-height:1.6;color:var(--text-2)}
+    .detail-value b{color:var(--text);font-weight:500}
+    .timeline{display:grid;gap:12px}
+    .timeline-item{display:flex;gap:10px;font-size:12px;color:var(--text-3);line-height:1.5}
+    .timeline-item strong{display:block;color:var(--text-2);font-weight:400}
+    .timeline-mark{width:7px;height:7px;border-radius:50%;background:#b9c1cc;margin-top:5px;flex:none}
+
+    /* ---------- charts ---------- */
+    .chart{display:grid;gap:24px}
+    .chart-row{display:grid;grid-template-columns:120px minmax(0,1fr) 88px;align-items:center;gap:16px}
+    .chart-label{font-size:13px;color:var(--text-2)}
+    .chart-track{height:24px;border-radius:var(--r-xs);background:var(--raised);display:flex;overflow:hidden}
+    .chart-seg{height:100%}
+    .chart-total{font-size:12px;color:var(--text-3);text-align:right}
+    .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-3)}
+    .legend-item{display:inline-flex;align-items:center;gap:6px}
+    .legend-swatch{width:8px;height:8px;border-radius:2px;flex:none}
+    .rank-list{display:grid;gap:12px}
+    .rank-row{display:grid;grid-template-columns:minmax(0,1fr) 88px 24px;gap:12px;align-items:center;font-size:13px;color:var(--text-2)}
+    .rank-bar{justify-self:end;width:88px;height:6px;border-radius:3px;background:var(--raised);overflow:hidden}
+    .rank-bar i{display:block;height:100%;background:#c3cbd6;border-radius:3px}
+    .rank-value{text-align:right;font-size:12px;color:var(--text-2)}
+
+    /* ---------- modal, toast ---------- */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(17,24,39,.45);z-index:50;display:grid;place-items:center;padding:24px}
+    .modal{background:var(--paper);width:min(520px,100%);border-radius:16px;box-shadow:var(--shadow-pop);padding:24px;max-height:88vh;overflow:auto}
+    .modal-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}
+    .modal-head h2{margin:0;font-size:18px;font-weight:500;line-height:1.3}
+    .close-btn{width:32px;height:32px;border-radius:var(--r);display:grid;place-items:center;color:var(--text-3);transition:background-color .16s var(--ease),color .16s var(--ease)}
+    .close-btn:hover{background:var(--raised);color:var(--text)}
+    .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:24px}
+    .toast{position:fixed;right:24px;bottom:24px;z-index:80;background:var(--rail);color:#fff;padding:12px 16px;border-radius:var(--r);box-shadow:var(--shadow-pop);font-size:13px;animation:toast-in .22s var(--ease);max-width:min(360px,calc(100vw - 48px))}
+    @keyframes toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ---------- mobile ---------- */
+    .mobile-nav{display:none}
+    @media(max-width:1180px){
+      .content{padding:20px 24px 28px}
+      .topbar{padding:0 24px}
+      .cols-2{grid-template-columns:minmax(0,1fr)}
+      .employee-layout{grid-template-columns:220px minmax(0,1fr)}
+    }
+    @media(max-width:900px){
+      .stat-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .stat:nth-child(2){border-right:0}
+      .stat:nth-child(1),.stat:nth-child(2){border-bottom:1px solid var(--line)}
+    }
+    @media(max-width:760px){
+      .app{display:block;height:auto;overflow:visible}
+      .sidebar{display:none}
+      .main{height:auto}
+      .content{overflow:visible;padding:16px 16px 88px}
+      .page{min-height:0}
+      .topbar{flex-basis:56px;height:56px;padding:0 16px}
+      .topbar-inner{gap:12px}
+      .crumb>span:first-child,.crumb-sep{display:none}
+      .env{display:none}
+      .role-select{max-width:200px}
+      .page-head{flex-direction:column;gap:16px}
+      .page-title{font-size:24px}
+      .head-actions{width:100%}
+      .head-actions .btn{flex:1}
+      .employee-layout{grid-template-columns:1fr}
+      .employee-profile{text-align:left}
+      .profile-info{grid-template-columns:1fr 1fr;gap:12px 16px}
+      .info-line{display:grid;grid-template-columns:1fr;gap:2px}
+      .info-line strong{text-align:left}
+      .chart-row{grid-template-columns:88px minmax(0,1fr) 72px;gap:12px}
+      .task-top{flex-direction:column;gap:8px}
+      table,thead,tbody,tr,td{display:block;width:100%}
+      thead{display:none}
+      tbody tr{padding:12px 0;border-bottom:1px solid var(--line)}
+      tbody tr:last-child{border-bottom:0}
+      td{display:flex;align-items:baseline;gap:12px;padding:4px 0;border-bottom:0;font-size:13px}
+      td::before{content:attr(data-label);flex:none;min-width:96px;font-size:12px;color:var(--text-3)}
+      td:first-child::before{display:none}
+      td[data-label="Сотрудник"]{display:block;margin-bottom:6px}
+      td[data-label="Сотрудник"]::before{display:none}
+      td.cell-action{justify-content:flex-end}
+      .mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:20;background:var(--paper);border-top:1px solid var(--line);height:60px;justify-content:space-around;padding:4px 4px env(safe-area-inset-bottom)}
+      .mobile-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;color:var(--text-3);min-width:60px;transition:color .16s var(--ease)}
+      .mobile-nav button.active{color:var(--text);font-weight:500}
+    }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(() => {
+  const STORAGE_KEY = 'start-fakt-demo-v1';
+  const TODAY = '2026-11-12';
+  const initialData = {
+    employees: [
+      {id:'e1',name:'Дарья Левченко',role:'Специалист складского учёта',dept:'Склад',brand:'Общее подразделение',startDate:'2026-11-09',mentor:'Олег К.',stage:'Первая неделя',tasks:[
+        {id:'t11',title:'Настроить доступ к учётной системе',description:'Проверить вход в WMS и доступ к рабочему терминалу.',owner:'IT',dueDate:'2026-11-10',bitrix:'completed',answer:'no',category:'Доступы',comment:'Логин и пароль выдали, но система не принимает пароль.'},
+        {id:'t12',title:'Познакомить с наставником',description:'Показать рабочее место и договориться о порядке вопросов.',owner:'Руководитель склада',dueDate:'2026-11-12',bitrix:'completed',answer:'yes',category:'Наставничество',comment:''},
+        {id:'t13',title:'Показать приёмку товара',description:'Разобрать типовой сценарий приёмки на учебном примере.',owner:'Наставник',dueDate:'2026-11-13',bitrix:'in_progress',answer:null,category:'Обучение',comment:''}
+      ]},
+      {id:'e2',name:'Максим Орлов',role:'Продавец-консультант',dept:'Магазин',brand:'GOODSPORTS',startDate:'2026-11-03',mentor:'Анна С.',stage:'Вторая неделя',tasks:[
+        {id:'t21',title:'Познакомить с наставником',description:'Назначить наставника на первые смены и познакомить лично.',owner:'Управляющий магазином',dueDate:'2026-11-04',bitrix:'completed',answer:'partial',category:'Наставничество',comment:'Познакомились, но наставник работает в другой смене.'},
+        {id:'t22',title:'Обучить работе с ассортиментом',description:'Показать основные категории, подбор размера и проверку наличия.',owner:'Наставник',dueDate:'2026-11-10',bitrix:'completed',answer:'partial',category:'Обучение',comment:'Не успели разобрать часть ассортимента.'},
+        {id:'t23',title:'Проверить доступ к кассе',description:'Выполнить учебную операцию под контролем наставника.',owner:'Администратор магазина',dueDate:'2026-11-06',bitrix:'completed',answer:'yes',category:'Доступы',comment:''}
+      ]},
+      {id:'e3',name:'Полина Громова',role:'Продавец-консультант',dept:'Магазин',brand:'RAGEX',startDate:'2026-10-29',mentor:'Сергей М.',stage:'Третья неделя',tasks:[
+        {id:'t31',title:'Провести обучение по технике RAGEX',description:'Разобрать ключевые характеристики и ответы на частые вопросы покупателей.',owner:'Наставник',dueDate:'2026-11-05',bitrix:'completed',answer:'no',category:'Обучение',comment:'Не было отдельного обучения по линейке RAGEX.'},
+        {id:'t32',title:'Показать оформление возврата',description:'Разобрать порядок действий на учебном примере.',owner:'Управляющий магазином',dueDate:'2026-11-10',bitrix:'completed',answer:'yes',category:'Процессы',comment:''},
+        {id:'t33',title:'Провести встречу по итогам второй недели',description:'Обсудить вопросы и согласовать следующие шаги.',owner:'Управляющий магазином',dueDate:'2026-11-12',bitrix:'in_progress',answer:null,category:'Обратная связь',comment:''}
+      ]},
+      {id:'e4',name:'Артём Савицкий',role:'Специалист оптовых продаж',dept:'Продажи',brand:'Общее подразделение',startDate:'2026-11-10',mentor:'Елена Р.',stage:'Первая неделя',tasks:[
+        {id:'t41',title:'Выдать доступ к CRM',description:'Проверить вход и открыть необходимые разделы.',owner:'IT',dueDate:'2026-11-11',bitrix:'completed',answer:'yes',category:'Доступы',comment:''},
+        {id:'t42',title:'Разобрать процесс обработки заявки',description:'Пройти путь заявки от поступления до передачи в логистику.',owner:'Наставник',dueDate:'2026-11-13',bitrix:'in_progress',answer:null,category:'Обучение',comment:''},
+        {id:'t43',title:'Согласовать план первой недели',description:'Уточнить приоритеты и ожидаемый результат на испытательный срок.',owner:'Руководитель отдела',dueDate:'2026-11-12',bitrix:'completed',answer:'yes',category:'Задачи',comment:''}
+      ]}
+    ],
+    issues: [
+      {id:'i1',employeeId:'e1',taskId:'t11',title:'Не работает доступ к учётной системе',category:'Доступы',severity:'high',status:'new',assignee:'IT · дежурный специалист',reportedAt:'2026-11-12T09:20:00',comment:'Логин и пароль выдали, но система не принимает пароль.',resolution:'',history:[{at:'2026-11-12T09:20:00',text:'Новичок сообщил, что результат не достигнут.'}]},
+      {id:'i2',employeeId:'e2',taskId:'t21',title:'Наставник недоступен в смене',category:'Наставничество',severity:'medium',status:'in_progress',assignee:'Управляющий магазином',reportedAt:'2026-11-11T14:10:00',comment:'Познакомились, но наставник работает в другой смене.',resolution:'Проверить пересечение графиков и назначить контактного наставника на смену.',history:[{at:'2026-11-11T14:10:00',text:'Новичок подтвердил результат частично.'},{at:'2026-11-12T10:05:00',text:'Управляющий взял вопрос в работу.'}]},
+      {id:'i3',employeeId:'e3',taskId:'t31',title:'Не проведено обучение по линейке RAGEX',category:'Обучение',severity:'high',status:'awaiting',assignee:'Руководитель розницы',reportedAt:'2026-11-10T11:30:00',comment:'Не было отдельного обучения по линейке RAGEX.',resolution:'Проведён вводный разбор линейки. Нужно подтверждение сотрудника.',history:[{at:'2026-11-10T11:30:00',text:'Новичок сообщил, что обучение не проведено.'},{at:'2026-11-11T16:40:00',text:'Ответственный отметил проблему как устранённую. Ожидается проверка новичком.'}]}
+    ]
+  };
+  const navItems = [
+    {id:'overview',label:'Обзор',short:'Обзор',icon:'grid'},
+    {id:'employee',label:'Кабинет новичка',short:'Кабинет',icon:'user'},
+    {id:'issues',label:'Расхождения',short:'Расхождения',icon:'alert'},
+    {id:'analytics',label:'Аналитика',short:'Аналитика',icon:'chart'}
+  ];
+  const iconPaths = {
+    grid:'<rect x="3" y="3" width="7" height="7" rx="1.4"/><rect x="14" y="3" width="7" height="7" rx="1.4"/><rect x="3" y="14" width="7" height="7" rx="1.4"/><rect x="14" y="14" width="7" height="7" rx="1.4"/>',
+    user:'<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/>',
+    alert:'<path d="M10.3 3.9 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 4h.01"/>',
+    chart:'<path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-5 5"/>',
+    people:'<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+    check:'<path d="m5 12 4 4L19 6"/>',
+    x:'<path d="M18 6 6 18M6 6l12 12"/>',
+    minus:'<path d="M5 12h14"/>',
+    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>',
+    arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
+    chevron:'<path d="m9 18 6-6-6-6"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',
+    search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+    reset:'<path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/>',
+    download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/>',
+    info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-9h.01"/>',
+    shield:'<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/>',
+    message:'<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/>'
+  };
+  const svg = (name, size=16) => `<svg class="ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[name]||iconPaths.info}</svg>`;
+  const stampGlyph = (cls) => {
+    const g = {yes:'check',partial:'minus',no:'x'}[cls];
+    if(!g) return '';
+    return `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[g]}</svg>`;
+  };
+  const $ = (s,root=document)=>root.querySelector(s);
+  const $$ = (s,root=document)=>[...root.querySelectorAll(s)];
+  let data = loadData();
+  let page = 'overview';
+  let selectedEmployee = 'e1';
+  let selectedIssue = 'i1';
+  let issueFilter = 'all';
+  let searchText = '';
+  let toastTimer;
+
+  function clone(obj){return JSON.parse(JSON.stringify(obj));}
+  function loadData(){try{const raw=localStorage.getItem(STORAGE_KEY);if(raw){const parsed=JSON.parse(raw);if(parsed&&Array.isArray(parsed.employees)&&Array.isArray(parsed.issues))return parsed;}}catch(e){}return clone(initialData);}
+  function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){/* Opaque-origin preview: current session still works without persistence. */}}
+  function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function initials(name){return name.split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();}
+  function employee(id){return data.employees.find(e=>e.id===id);}
+  function task(emp,taskId){return emp?.tasks.find(t=>t.id===taskId);}
+  function allTasks(){return data.employees.flatMap(e=>e.tasks.map(t=>({...t,employee:e})));}
+  function openIssues(){return data.issues.filter(i=>i.status!=='closed');}
+  function taskProgress(emp){const done=emp.tasks.filter(t=>t.answer==='yes').length;return Math.round(done/emp.tasks.length*100);}
+  function dayNumber(emp){const a=new Date(emp.startDate+'T00:00:00');const b=new Date(TODAY+'T00:00:00');return Math.max(1,Math.floor((b-a)/86400000)+1);}
+  function dateShort(s){if(!s)return '—';const d=new Date(s.length===10?s+'T00:00:00':s);return d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'}).replace('.','');}
+  function timeShort(s){const d=new Date(s);return `${d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})} · ${d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}`;}
+  function plural(n,one,few,many){const n10=n%10,n100=n%100;if(n10===1&&n100!==11)return one;if(n10>=2&&n10<=4&&(n100<10||n100>=20))return few;return many;}
+  function statusLabel(s){return ({new:'Новая',in_progress:'В работе',awaiting:'Ждёт проверки',closed:'Закрыта'})[s]||s;}
+  function statusDot(s){return ({new:'bad',awaiting:'wait',closed:'yes'})[s]||'';}
+  function answerLabel(a){return ({yes:'Подтверждено',partial:'Частично',no:'Не подтверждено'})[a]||'Не проверено';}
+  function answerStamp(a){return ({yes:'yes',partial:'partial',no:'no'})[a]||'none';}
+  function bitrixLabel(s){return s==='completed'?'Выполнена':'В работе';}
+  function verdictOf(emp){const answers=emp.tasks.map(t=>t.answer);if(answers.includes('no'))return{cls:'no',label:'Не подтверждено'};if(answers.includes('partial'))return{cls:'partial',label:'Частично'};if(answers.every(a=>a==='yes'))return{cls:'yes',label:'Подтверждено'};return{cls:'none',label:'В процессе'};}
+  function notify(message){const old=$('.toast');if(old)old.remove();const el=document.createElement('div');el.className='toast';el.textContent=message;document.body.append(el);clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.remove(),3000);}
+  function setPage(next){page=next;render();const c=$('.content');if(c)c.scrollTop=0;}
+  function pageTitle(){return ({overview:'Обзор адаптации',employee:'Кабинет новичка',issues:'Расхождения',analytics:'Аналитика процесса'})[page];}
+
+  function chrome(content){
+    const issueCount=openIssues().length;
+    return `<div class="app">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4.5 4.5L19 7"/></svg></span><span><span class="brand-name">СТАРТ—ФАКТ</span><span class="brand-sub">Контроль адаптации</span></span></div>
+        <div class="rail-label">Рабочее пространство</div>
+        <nav class="nav">${navItems.map(n=>`<button class="nav-btn ${page===n.id?'active':''}" data-page="${n.id}">${svg(n.icon)}<span>${n.label}</span>${n.id==='issues'?`<span class="nav-count fig">${issueCount}</span>`:''}</button>`).join('')}</nav>
+        <div class="sidebar-bottom">
+          <div class="rail-note"><p>Демо-режим. Сотрудники и ответы вымышлены, Битрикс24 не подключён.</p><button id="resetDemoBtn" class="rail-link">${svg('reset')}Сбросить демо</button></div>
+          <div class="user-mini"><span class="avatar">HR</span><span class="user-text"><strong>Демо · HR</strong><small>Режим просмотра</small></span></div>
+        </div>
+      </aside>
+      <main class="main">
+        <header class="topbar"><div class="topbar-inner"><div class="crumb"><span>СТАРТ—ФАКТ</span><span class="crumb-sep">/</span><b>${pageTitle()}</b></div><div class="top-actions"><span class="env"><i class="dot"></i>Демо-данные</span><select id="roleSelect" class="role-select" aria-label="Перейти к сотруднику">${data.employees.map(e=>`<option value="${e.id}" ${selectedEmployee===e.id?'selected':''}>Новичок: ${esc(e.name)}</option>`).join('')}</select></div></div></header>
+        <div class="content"><div class="page">${content}</div></div>
+        <nav class="mobile-nav">${navItems.map(n=>`<button class="${page===n.id?'active':''}" data-page="${n.id}">${svg(n.icon)}<span>${n.short}</span></button>`).join('')}</nav>
+      </main>
+    </div>`;
+  }
+
+  function statCard(label,value,note,accent=false){return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value ${accent?'is-accent':''} fig">${value}</div><div class="stat-note">${note}</div></div>`;}
+
+  function issueRow(i,compact=false){
+    const e=employee(i.employeeId);
+    return `<button class="issue-row" data-open-issue="${i.id}"><span class="sev sev--${i.severity}"></span><span class="issue-main"><strong>${esc(i.title)}</strong><span class="issue-meta"><span>${esc(e?.name||'Сотрудник')}</span><span>·</span><span>${esc(e?.dept||'')}</span><span>·</span><span>${esc(i.category)}</span></span></span><span class="issue-side"><span class="status status--${statusDot(i.status)}"><i class="dot"></i>${statusLabel(i.status)}</span>${compact?'':`<span class="quiet-count">${dateShort(i.reportedAt)}</span>`}</span></button>`;
+  }
+
+  function employeeRow(e){
+    const progress=taskProgress(e);
+    const v=verdictOf(e);
+    return `<tr>
+      <td data-label="Сотрудник"><div class="person"><span class="avatar">${initials(e.name)}</span><span class="person-text"><strong>${esc(e.name)}</strong><small>${esc(e.role)}</small><small class="person-day">${dayNumber(e)}-й день</small></span></div></td>
+      <td data-label="Подразделение"><span class="dept">${esc(e.dept)}</span>${e.brand!=='Общее подразделение'?`<small class="dept-brand">${esc(e.brand)}</small>`:''}</td>
+      <td data-label="Подтверждено"><div class="progress"><span class="progress-track"><span class="progress-fill" style="transform:scaleX(${progress/100})"></span></span><span class="fig">${progress}%</span></div></td>
+      <td data-label="Вердикт"><span class="verdict"><span class="stamp stamp--${v.cls}">${stampGlyph(v.cls)}</span>${v.label}</span></td>
+      <td class="cell-action"><button class="row-link" data-select-employee="${e.id}" aria-label="Открыть кабинет ${esc(e.name)}">${svg('chevron')}</button></td>
+    </tr>`;
+  }
+
+  function overview(){
+    const tasks=allTasks();
+    const total=data.employees.length;
+    const problems=openIssues().length;
+    const confirmed=tasks.filter(t=>t.answer==='yes').length;
+    const awaiting=openIssues().filter(i=>i.status==='awaiting').length;
+    return `<div class="page-head"><div class="head-text"><div class="eyebrow">Демо-срез · 12 ноября 2026</div><h1 class="page-title">Обзор адаптации</h1><p class="page-desc">Смотрите не только на статус задачи, но и на то, получил ли новый сотрудник нужный результат</p></div><div class="head-actions"><button class="btn" id="exportBtn">${svg('download')}Экспорт данных</button><button class="btn btn--primary" id="goEmployee">Открыть кабинет новичка${svg('arrow')}</button></div></div>
+      <div class="stat-strip">
+        ${statCard('Новых сотрудников',total,'в демо-выборке')}
+        ${statCard('Открытых расхождений',problems,'требуют ответственного')}
+        ${statCard('Результатов подтверждено',confirmed,`из ${tasks.length} задач`,true)}
+        ${statCard('Ждут проверки',awaiting,'ответственный отметил устранение')}
+      </div>
+      <div class="grid cols-2 grow">
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Сотрудники на адаптации</h2><p class="card-sub">Прогресс основан на подтверждённых результатах, а не на закрытых задачах</p></div><button class="link-btn" data-page="employee">Открыть кабинет${svg('arrow')}</button></div><div class="table-wrap"><table><thead><tr><th>Сотрудник</th><th>Подразделение</th><th>Подтверждено</th><th>Вердикт</th><th></th></tr></thead><tbody>${data.employees.map(employeeRow).join('')}</tbody></table></div></section>
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Требуют внимания</h2><p class="card-sub">Расхождения между статусом задачи и ответом новичка</p></div><span class="quiet-count fig">${problems} открыто</span></div><div class="issue-list">${openIssues().length?openIssues().slice(0,4).map(i=>issueRow(i,true)).join(''):`<div class="empty">${svg('check')}<span>Открытых расхождений нет</span></div>`}</div><div class="card-foot"><button class="btn btn--sm" data-page="issues">Все расхождения${svg('arrow')}</button></div></section>
+      </div>
+      <div class="notice">${svg('shield')}<div><strong>Принцип продукта:</strong> ответ «Нет» или «Частично» — это сигнал для проверки процесса, а не оценка сотрудника и не автоматическое обвинение ответственного.</div></div>`;
+  }
+
+  function employeePortal(){
+    const e=employee(selectedEmployee)||data.employees[0];
+    const tasks=e.tasks;const progress=taskProgress(e);
+    const open=data.issues.filter(i=>i.employeeId===e.id&&i.status!=='closed');
+    return `<div class="page-head"><div class="head-text"><div class="eyebrow">${dayNumber(e)}-й день · ${esc(e.stage)}</div><h1 class="page-title">${esc(e.name)}</h1><p class="page-desc">Подтвердите, что необходимые условия и помощь действительно получены. Это займёт около минуты.</p></div><div class="head-actions"><span class="quiet-tag">${esc(e.role)} · ${esc(e.dept)}</span></div></div>
+      <div class="employee-layout">
+        <aside class="card employee-card"><div class="employee-profile"><span class="avatar">${initials(e.name)}</span><span><h3>${esc(e.name)}</h3><p>${esc(e.role)}</p></span></div><div class="profile-info"><div class="info-line"><span>Подразделение</span><strong>${esc(e.dept)}</strong></div><div class="info-line"><span>Направление</span><strong>${esc(e.brand)}</strong></div><div class="info-line"><span>Дата выхода</span><strong>${dateShort(e.startDate)}</strong></div><div class="info-line"><span>Наставник</span><strong>${esc(e.mentor)}</strong></div><div class="info-line"><span>Подтверждено</span><strong class="fig">${progress}%</strong></div><div class="progress-track progress-full"><span class="progress-fill" style="transform:scaleX(${progress/100})"></span></div></div></aside>
+        <section>
+          <div class="notice" style="margin-bottom:16px">${svg('info')}<div>Задачи ниже — демонстрационная копия статусов из условного процесса Битрикс24. Ваша отметка показывает, достигнут ли результат на практике.</div></div>
+          ${open.length?`<div class="notice notice--warn" style="margin-bottom:16px">${svg('alert')}<div><strong>Открытых вопросов, ожидающих решения: ${open.length}</strong>. После устранения проблемы вернитесь сюда и подтвердите результат повторно.</div></div>`:''}
+          ${tasks.map(t=>taskCard(e,t)).join('')}
+        </section>
+      </div>`;
+  }
+
+  function taskCard(e,t){
+    const related=data.issues.find(i=>i.employeeId===e.id&&i.taskId===t.id&&i.status!=='closed');
+    let result=t.answer?`Ваш ответ: <b>${answerLabel(t.answer).toLowerCase()}</b>`:'Ожидается ваш ответ';
+    if(related&&related.status==='awaiting')result='Ответственный отметил проблему как устранённую. Нужна повторная проверка.';
+    if(related&&related.status==='in_progress')result='Ответственный работает над проблемой.';
+    const answered=t.answer;
+    const stamp=answerStamp(answered);
+    return `<article class="card task-card"><div class="task-top"><div><h3 class="task-title">${esc(t.title)}</h3><p class="task-desc">${esc(t.description)}</p></div><span class="status status--${t.bitrix==='completed'?'yes':''}"><i class="dot"></i>${t.bitrix==='completed'?'Задача закрыта':'Задача в работе'}</span></div>
+      <div class="task-meta"><span>${svg('people')}Ответственный в процессе: ${esc(t.owner)}</span><span>${svg('calendar')}Срок: ${dateShort(t.dueDate)}</span><span>Категория: ${esc(t.category)}</span></div>
+      ${t.bitrix==='completed'?`<div class="verdict-block"><div class="confirm-question">${related&&related.status==='awaiting'?'Ответственный сообщил об устранении. Подтвердите результат повторно':'Вы действительно получили этот результат?'}</div>${related&&related.status!=='awaiting'?`<div class="notice notice--warn">${svg('clock')}<div>Ваш сигнал уже передан ответственному. Повторная проверка станет доступна после того, как он отметит проблему как устранённую.</div></div><div class="task-result">${result} · <span class="status status--${statusDot(related.status)}"><i class="dot"></i>${statusLabel(related.status)}</span></div>`:`<div class="verdict-row">${[['yes','Да'],['partial','Частично'],['no','Нет']].map(([v,l])=>`<button class="verdict-opt ${answered===v?'is-selected':''}" data-answer="${v}" data-employee="${e.id}" data-task="${t.id}"><span class="stamp stamp--${answerStamp(v)}">${stampGlyph(answerStamp(v))}</span>${l}</button>`).join('')}</div><div class="form-group" style="margin:16px 0 0"><label class="label">Комментарий (необязательно)</label><textarea class="textarea" rows="2" data-comment-field="${t.id}" placeholder="Что именно не получилось или чего не хватает?">${esc(related?'':t.comment||'')}</textarea></div><div class="task-result">${result}</div>`}</div>`:`<div class="verdict-block"><div class="confirm-question">Задача ещё выполняется</div><div class="task-result">Подтверждение станет доступно после выполнения задачи в условном процессе.</div></div>`}
+    </article>`;
+  }
+
+  function issuesPage(){
+    const list=openIssues().filter(i=>issueFilter==='all'||i.status===issueFilter).filter(i=>{const e=employee(i.employeeId);const s=(i.title+' '+e?.name+' '+e?.dept+' '+i.category).toLowerCase();return s.includes(searchText.toLowerCase());});
+    return `<div class="page-head"><div class="head-text"><div class="eyebrow">Демо-срез · 12 ноября 2026</div><h1 class="page-title">Расхождения</h1><p class="page-desc">Здесь собраны случаи, когда результат по задаче не подтверждён новичком. Назначьте ответственного и доведите вопрос до повторной проверки.</p></div><div class="head-actions"><span class="quiet-tag fig">${openIssues().length} открыто</span></div></div>
+      <div class="filters"><input id="issueSearch" class="field" type="search" placeholder="Сотрудник или проблема" value="${esc(searchText)}">${[['all','Все'],['new','Новые'],['in_progress','В работе'],['awaiting','Ждут проверки']].map(([v,l])=>`<button class="chip ${issueFilter===v?'is-active':''}" data-issue-filter="${v}">${l}</button>`).join('')}</div>
+      <div class="grid issue-layout grow" style="grid-template-columns:minmax(0,1fr) 320px;align-items:stretch"><section class="card"><div class="card-head"><div><h2 class="card-title">Очередь расхождений</h2><p class="card-sub">Откройте запись, чтобы увидеть детали и выполнить следующее действие</p></div></div><div class="issue-list">${list.length?list.map(i=>issueRow(i)).join(''):`<div class="empty">${svg('check')}<span>По выбранному фильтру записей нет</span></div>`}</div></section>${issueDetail(selectedIssue)}</div>`;
+  }
+
+  function issueDetail(issueId){
+    const i=data.issues.find(x=>x.id===issueId&&x.status!=='closed');
+    if(!i)return `<aside class="card"><div class="empty">${svg('arrow')}<span>Выберите расхождение, чтобы увидеть детали</span></div></aside>`;
+    const e=employee(i.employeeId);const t=task(e,i.taskId);
+    const stamp=answerStamp(t?.answer);
+    return `<aside class="card"><div class="card-head"><div><h2 class="card-title">Карточка расхождения</h2><p class="card-sub fig">${esc(i.id.toUpperCase())} · ${dateShort(i.reportedAt)}</p></div><span class="status status--${statusDot(i.status)}"><i class="dot"></i>${statusLabel(i.status)}</span></div>
+      <div class="detail-section"><div class="detail-label">Проблема</div><div class="detail-value"><b>${esc(i.title)}</b><br>${esc(i.comment||'Комментарий не указан')}</div></div>
+      <div class="detail-section"><div class="detail-label">Сотрудник</div><div class="detail-value"><b>${esc(e?.name||'—')}</b><br>${esc(e?.role||'')} · ${esc(e?.dept||'')}</div></div>
+      <div class="detail-section"><div class="detail-label">Исходная задача</div><div class="detail-value">${esc(t?.title||'—')}<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="status status--${t?.bitrix==='completed'?'yes':''}"><i class="dot"></i>${bitrixLabel(t?.bitrix)}</span><span class="verdict"><span class="stamp stamp--${stamp}">${stampGlyph(stamp)}</span>${answerLabel(t?.answer)}</span></div></div></div>
+      <div class="detail-section"><div class="detail-label">Ответственный</div><div class="detail-value">${esc(i.assignee||'Не назначен')}</div></div>
+      ${i.resolution?`<div class="detail-section"><div class="detail-label">Что сделано</div><div class="detail-value">${esc(i.resolution)}</div></div>`:''}
+      <div class="detail-section"><div class="detail-label">История</div><div class="timeline">${i.history.map(h=>`<div class="timeline-item"><span class="timeline-mark"></span><div><strong>${esc(h.text)}</strong><br><span class="fig">${timeShort(h.at)}</span></div></div>`).join('')}</div></div>
+      ${i.status==='new'?`<button class="btn btn--primary btn--block" style="margin-top:16px" data-action="start" data-issue="${i.id}">Взять в работу${svg('arrow')}</button>`:''}
+      ${i.status==='in_progress'?`<button class="btn btn--primary btn--block" style="margin-top:16px" data-action="resolve" data-issue="${i.id}">Отметить устранённой${svg('check')}</button>`:''}
+      ${i.status==='awaiting'?`<div class="notice notice--warn" style="margin-top:16px">${svg('clock')}<div>Ожидаем повторное подтверждение от сотрудника. Не закрывайте случай до проверки результата.</div></div><button class="btn btn--block" style="margin-top:12px" data-action="backWork" data-issue="${i.id}">Вернуть в работу</button>`:''}
+      <button class="link-btn" style="margin-top:16px" data-action="editIssue" data-issue="${i.id}">Изменить ответственного или комментарий</button></aside>`;
+  }
+
+  function rankList(entries){
+    const max=Math.max(1,...entries.map(e=>e[1]));
+    return `<div class="rank-list">${entries.map(([k,v])=>`<div class="rank-row"><span>${esc(k)}</span><span class="rank-bar"><i style="width:${v/max*100}%"></i></span><span class="rank-value fig">${v}</span></div>`).join('')}</div>`;
+  }
+
+  function analytics(){
+    const open=openIssues();
+    const tasks=allTasks();
+    const confirmed=tasks.filter(t=>t.answer==='yes').length;
+    const categories={};const depts={};
+    open.forEach(i=>{categories[i.category]=(categories[i.category]||0)+1;const e=employee(i.employeeId);if(e)depts[e.dept]=(depts[e.dept]||0)+1;});
+    const stages={'Первая неделя':0,'Вторая неделя':0,'Третья неделя':0,'Четвёртая неделя':0};
+    data.employees.forEach(e=>{const n=dayNumber(e);const stage=n<=7?'Первая неделя':n<=14?'Вторая неделя':n<=21?'Третья неделя':'Четвёртая неделя';stages[stage]++;});
+    const deptTasks={};
+    tasks.forEach(t=>{const d=t.employee?.dept||'—';deptTasks[d]=deptTasks[d]||{yes:0,partial:0,no:0,open:0};deptTasks[d][t.answer||'open']++;});
+    const segOrder=[['yes','Подтверждено'],['partial','Частично'],['no','Не подтверждено'],['open','В работе']];
+    const segColor={yes:'var(--seg-yes)',partial:'var(--seg-partial)',no:'var(--seg-no)',open:'var(--seg-open)'};
+    return `<div class="page-head"><div class="head-text"><div class="eyebrow">Демо-срез · 12 ноября 2026</div><h1 class="page-title">Аналитика процесса</h1><p class="page-desc">Повторяющиеся расхождения помогают увидеть не индивидуальную ошибку, а место, где стоит улучшить сам процесс адаптации</p></div><div class="head-actions"><span class="quiet-tag">Демо-выборка</span></div></div>
+      <div class="stat-strip">
+        ${statCard('Открытых расхождений',open.length,'в демо-выборке')}
+        ${statCard('Ждут проверки',open.filter(i=>i.status==='awaiting').length,'ответственный отметил устранение')}
+        ${statCard('Подтверждено задач',confirmed,`из ${tasks.length} задач`,true)}
+        ${statCard('Подразделений',new Set(data.employees.map(e=>e.dept)).size,Object.entries(data.employees.reduce((a,e)=>{a[e.dept]=1;return a;},{})).map(([k])=>k).join(' · '))}
+      </div>
+      <div class="grid" style="grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);align-items:stretch">
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Состав задач по подразделениям</h2><p class="card-sub">Доля задач, результат по которым подтверждён, получен частично или не получен</p></div></div>
+          <div class="chart">${Object.entries(deptTasks).map(([d,c])=>{const total=c.yes+c.partial+c.no+c.open;return `<div class="chart-row"><span class="chart-label">${esc(d)}</span><span class="chart-track">${segOrder.map(([k])=>c[k]?`<span class="chart-seg" style="width:${c[k]/total*100}%;background:${segColor[k]}"></span>`:'').join('')}</span><span class="chart-total fig">${total} ${plural(total,'задача','задачи','задач')}</span></div>`;}).join('')}</div>
+          <div class="legend" style="margin-top:20px">${segOrder.map(([k,l])=>`<span class="legend-item"><i class="legend-swatch" style="background:${segColor[k]}"></i>${l}</span>`).join('')}</div>
+        </section>
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Что важно учитывать</h2><p class="card-sub">Правила интерпретации показателей</p></div></div><div class="notice notice--success" style="margin-bottom:12px">${svg('shield')}<div><strong>Не рейтинг сотрудников:</strong> категории показывают потенциальные сбои процесса, а не качество работы новичка.</div></div><div class="notice notice--warn">${svg('alert')}<div><strong>Не статистика ТГТ:</strong> выборка синтетическая. Для управленческих выводов нужны реальные данные, согласованные определения и достаточный период наблюдения.</div></div></section>
+      </div>
+      <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);align-items:start">
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Расхождения по категориям</h2><p class="card-sub">Только незакрытые случаи</p></div></div>${Object.keys(categories).length?rankList(Object.entries(categories).sort((a,b)=>b[1]-a[1])):`<div class="empty">Пока нет расхождений</div>`}</section>
+        <section class="card"><div class="card-head"><div><h2 class="card-title">По подразделениям</h2><p class="card-sub">Где сейчас требуется больше внимания</p></div></div>${Object.keys(depts).length?rankList(Object.entries(depts).sort((a,b)=>b[1]-a[1])):`<div class="empty">Пока нет открытых случаев</div>`}</section>
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Новички по этапам адаптации</h2><p class="card-sub">Стаж рассчитан от даты выхода</p></div></div>${rankList(Object.entries(stages))}</section>
+      </div>`;
+  }
+
+  function render(){const body=({overview,employee:employeePortal,issues:issuesPage,analytics})[page]();$('#app').innerHTML=chrome(body);bind();}
+  function bind(){
+    $$('[data-page]').forEach(b=>b.addEventListener('click',()=>setPage(b.dataset.page)));
+    const rs=$('#roleSelect');if(rs)rs.addEventListener('change',e=>{selectedEmployee=e.target.value;if(page==='employee')render();else notify('Выбран новичок: '+employee(selectedEmployee).name);});
+    $$('[data-select-employee]').forEach(b=>b.addEventListener('click',()=>{selectedEmployee=b.dataset.selectEmployee;setPage('employee');}));
+    const go=$('#goEmployee');if(go)go.addEventListener('click',()=>setPage('employee'));
+    $$('[data-answer]').forEach(b=>b.addEventListener('click',()=>{const field=$(`[data-comment-field="${b.dataset.task}"]`);handleAnswer(b.dataset.employee,b.dataset.task,b.dataset.answer,field?field.value:'');}));
+    const reset=$('#resetDemoBtn');if(reset)reset.addEventListener('click',resetDemo);
+    $$('[data-open-issue]').forEach(el=>el.addEventListener('click',()=>{selectedIssue=el.dataset.openIssue;render();}));
+    $$('[data-issue-filter]').forEach(b=>b.addEventListener('click',()=>{issueFilter=b.dataset.issueFilter;render();}));
+    const search=$('#issueSearch');if(search)search.addEventListener('input',e=>{const pos=e.target.selectionStart;searchText=e.target.value;const y=$('.content').scrollTop;render();const next=$('#issueSearch');next.focus();next.setSelectionRange(pos,pos);$('.content').scrollTop=y;});
+    $$('[data-action]').forEach(b=>b.addEventListener('click',()=>handleIssueAction(b.dataset.action,b.dataset.issue)));
+    const exportBtn=$('#exportBtn');if(exportBtn)exportBtn.addEventListener('click',exportData);
+  }
+  function handleAnswer(employeeId,taskId,answer,commentText=''){
+    const e=employee(employeeId),t=task(e,taskId);if(!e||!t)return;
+    if(commentText.trim())t.comment=commentText.trim();
+    const existing=data.issues.find(i=>i.employeeId===employeeId&&i.taskId===taskId&&i.status!=='closed');
+    if(existing&&(existing.status==='new'||existing.status==='in_progress')){notify('Сначала дождитесь, пока ответственный отметит устранение проблемы.');return;}
+    if(existing&&existing.status==='awaiting'){
+      if(answer==='yes'){
+        t.answer='yes';t.comment='';existing.status='closed';existing.history.push({at:new Date().toISOString(),text:'Новичок повторно подтвердил результат. Расхождение закрыто.'});notify('Результат подтверждён. Расхождение закрыто.');
+      }else{
+        t.answer=answer;existing.comment=t.comment||existing.comment;existing.status='in_progress';existing.history.push({at:new Date().toISOString(),text:'Новичок не подтвердил результат повторно. Вопрос возвращён в работу.'});if(answer==='no')t.comment=t.comment||'Результат пока не достигнут.';notify('Результат пока не подтверждён — вопрос возвращён ответственному.');
+      }
+    }else if(existing){
+      if(answer==='yes'){t.answer='yes';t.comment='';notify('Результат подтверждён.');}
+      else{t.answer=answer;existing.comment=t.comment||existing.comment;existing.history.push({at:new Date().toISOString(),text:`Новичок обновил ответ: ${answerLabel(answer).toLowerCase()}.`});notify('Ответ обновлён. Ответственный видит комментарий.');}
+    }else if(answer==='yes'){
+      t.answer='yes';t.comment='';notify('Спасибо! Результат подтверждён.');
+    }else{
+      t.answer=answer;
+      const defaultComment=answer==='partial'?'Результат получен частично. Требуется уточнить, что осталось сделать.':'Результат пока не достигнут. Требуется помощь ответственного.';
+      const id='i'+Date.now();data.issues.unshift({id,employeeId,taskId,title:answer==='partial'?`Результат получен частично: ${t.title}`:`Не подтверждён результат: ${t.title}`,category:t.category,severity:answer==='no'?'high':'medium',status:'new',assignee:t.owner,reportedAt:new Date().toISOString(),comment:t.comment||defaultComment,resolution:'',history:[{at:new Date().toISOString(),text:`Новичок ответил: ${answerLabel(answer).toLowerCase()}.`}]});selectedIssue=id;notify('Расхождение зарегистрировано и передано в очередь.');
+    }
+    save();render();
+  }
+  function handleIssueAction(action,id){const i=data.issues.find(x=>x.id===id);if(!i)return;
+    if(action==='start'){i.status='in_progress';i.history.push({at:new Date().toISOString(),text:'Ответственный взял расхождение в работу.'});save();render();notify('Расхождение взято в работу.');}
+    if(action==='resolve'){showResolveModal(i);}
+    if(action==='backWork'){i.status='in_progress';i.history.push({at:new Date().toISOString(),text:'Расхождение возвращено в работу.'});save();render();notify('Расхождение возвращено в работу.');}
+    if(action==='editIssue'){showEditModal(i);}
+  }
+  function showModal(title,content,submitLabel,onSubmit){const wrap=document.createElement('div');wrap.className='modal-backdrop';wrap.innerHTML=`<div class="modal" role="dialog" aria-modal="true"><div class="modal-head"><h2>${title}</h2><button class="close-btn" aria-label="Закрыть">${svg('x')}</button></div>${content}<div class="modal-actions"><button class="btn" data-cancel>Отмена</button><button class="btn btn--primary" data-submit>${submitLabel}</button></div></div>`;document.body.append(wrap);const close=()=>wrap.remove();$('.close-btn',wrap).onclick=close;$('[data-cancel]',wrap).onclick=close;wrap.addEventListener('click',e=>{if(e.target===wrap)close();});$('[data-submit]',wrap).onclick=()=>{if(onSubmit(wrap)!==false)close();};return wrap;}
+  function showResolveModal(i){showModal('Отметить проблему устранённой',`<div class="notice notice--success" style="margin-bottom:16px">${svg('check')}<div>После этого сотрудник получит возможность повторно подтвердить результат. Расхождение не закроется автоматически.</div></div><div class="form-group"><label class="label">Что было сделано?</label><textarea class="textarea" id="resolutionText" placeholder="Например: проверили учётную запись, обновили права доступа, сотрудник может войти">${esc(i.resolution||'')}</textarea><div class="helper">Кратко зафиксируйте действие, которое устранило препятствие</div></div>`, 'Отправить на проверку',wrap=>{const value=$('#resolutionText',wrap).value.trim();if(!value){notify('Опишите, что было сделано.');return false;}i.resolution=value;i.status='awaiting';i.history.push({at:new Date().toISOString(),text:'Ответственный отметил проблему как устранённую. Ожидается повторная проверка новичком.'});save();render();notify('Отправлено новичку на повторную проверку.');});}
+  function showEditModal(i){showModal('Изменить детали расхождения',`<div class="form-group"><label class="label">Ответственный</label><input class="field" style="width:100%" id="assigneeText" value="${esc(i.assignee||'')}" placeholder="Имя или роль ответственного"></div><div class="form-group"><label class="label">Комментарий к проблеме</label><textarea class="textarea" id="issueComment">${esc(i.comment||'')}</textarea></div>`, 'Сохранить',wrap=>{i.assignee=$('#assigneeText',wrap).value.trim()||'Не назначен';i.comment=$('#issueComment',wrap).value.trim();i.history.push({at:new Date().toISOString(),text:'Обновлены ответственный или комментарий.'});save();render();notify('Изменения сохранены.');});}
+  function exportData(){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='start-fakt-demo-data.json';a.click();URL.revokeObjectURL(url);notify('Демонстрационные данные экспортированы.');}
+  function resetDemo(){if(!confirm('Сбросить все изменения и восстановить исходные демонстрационные данные?'))return;data=clone(initialData);selectedEmployee='e1';selectedIssue='i1';issueFilter='all';searchText='';save();render();notify('Демо-данные восстановлены.');}
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'){$$('.modal-backdrop').forEach(m=>m.remove());}});
+  // Expose a small reset helper for the demo owner; no external integrations are active.
+  window.startFaktReset=resetDemo;
+  save();render();
+})();
+</script>
+</body>
+</html>
